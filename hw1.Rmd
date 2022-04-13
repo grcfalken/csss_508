@@ -1,0 +1,48 @@
+---
+title: "508HW1"
+author: "Grace Falken"
+date: "`r format(Sys.time(), format='%B %d, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pander)
+library(ggplot2)
+```
+
+## Introduction to the Data
+
+The `swiss` dataset presents fertility and economic indicators of `r nrow(swiss)` Swiss provinces in 1888. For each province, we observe fertility, which ranges from `r min(swiss$Fertility)` to `r round(max(swiss$Fertility), 0)`; the percent occupational involvement agriculture; passage rates of an army examination; population percentage with education beyond primary school; percent Catholic; and infant mortality rates. 
+
+First, it's helpful to know the range and distribution of these variables:
+
+```{r data summary, echo=FALSE}
+data(swiss)
+
+pander(summary(swiss), stype="rmarkdown", split.tables=120)
+
+```
+
+It's also helpful to observe how these variables are generally related:
+
+
+```{r pairwise, echo=FALSE, fig.align='center'}
+pairs(swiss, pch = 8, col = "blue",
+      main = "Pairwise Relationships of Swiss variables")
+```
+
+## Relating Agriculture and Education
+
+Let's say we're particularly interested in the relationship between the percent of the population in the agricultural industry. The correlation between these two variables is `r round(cor(swiss$Agriculture, swiss$Examination),3)`, which is relatively high. As a point of comparison, the correlation between how much of the population is Catholic and the portion of the population working in agriculture is `r round(cor(swiss$Agriculture, swiss$Catholic),3)`.
+
+We can also looks at this in more detail: 
+
+```{r ag and ed, echo=FALSE, fig.align='center', message=FALSE}
+ggplot(swiss, aes(x=Education,y=Agriculture)) + geom_point(color="orange2") + geom_smooth()
+```
+
+
+And notice that these variables are more tightly related (smaller standard errors) when the population portion with education beyond primary school is below twenty percent.
+
+

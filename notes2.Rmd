@@ -1,0 +1,239 @@
+---
+title: "notes2"
+author: "Grace Falken"
+date: "4/7/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+## Useful shit
+
+```{r tips}
+
+# comments follow pound symbols ... in rmd bodies this creates headers
+
+#you can save an r object on your computer (you can also save functions this way)
+#     save(object,file="new_object.RData") 
+#     load("new_object.RData")
+#these are saved in the working directory
+
+```
+
+`getwd()`
+`setwd("/Users/gracefalken/Desktop/PPM Year 1/Q3 Spring/CSSS 508")`
+^ Markdown files automatically set where they're saved as the working directory
+
+For journal articles, Breon suggests using rrtools for journal articles and huskydown for UW dissertations.
+
+
+To run a `.R` script within an `.Rmd` and `.R`, you can use the `source()` function. (E.g., source the cleaning script from an external script).
+
+## Data and Subsetting
+
+```{r gapminder data}
+
+library(gapminder)
+str(gapminder) # notice that factor variables are a variable where numeric values are tied to categories (like a likert scale) ("categorical data with an underlying numeric representation")
+
+#notice these are panel data 
+
+```
+
+We want to use `dplyr` to filter the data into subsets
+
+```{r dplyr, message=FALSE}
+library(dplyr)
+
+gapminder %>% filter(country=="Algeria") # gives the subsample of all observations for algeria
+
+
+```
+
+Packages w the same-named functions as in base R temporarily overwrite the base functions
+To use those functions, call the package where the function is: `stats::filter`
+
+And thus now we arrive at discussing the pipe. These read left-to-right:
+
+`gapminder$pop %>% mean() %>% log()` gets the mean of the log of the data, analogous to `mean(log(gapminder$pop))`
+
+For our subsampel command, the statement `country=="Algergia"` returns true and false for this logic statement.
+
+### Logical Operators
+
+`==` tests for equivalency.
+
+`!=` not equal to
+
+`>` and fam
+
+`%in%` checks if equal to one of several values
+
+`&` both conditions need to hold
+
+`|` at least one condition holds (OR)
+
+`!` inverts logical condition
+
+
+```{r multiple conditions}
+gapminder %>% filter(country=="Oman" & year > 1980)
+
+#saving a subset as an object
+china <- gapminder %>% filter(country=="China")
+
+```
+
+
+## Plotting with ggplot2
+
+The core idea here is layered grammar of graphics: we can break up elemenets of a plot into pieces and combine them.
+
+```{r plot base r, fig.align='center'}
+plot(lifeExp ~ year, 
+     data = china, 
+     xlab = "Year", 
+     ylab = "Life expectancy",
+     main = "Life expectancy in China", 
+     col = "red", 
+     cex.lab = 1.5,
+     cex.main= 1.5,
+     pch = 16)
+```
+
+
+Versus the `ggplot2` version
+
+```{r china simple, fig.align='center'}
+ggplot(data = china, 
+       aes(x = year, y = lifeExp)) +
+    geom_point()
+```
+
+Add layers using `+`. Aesthetics determine how the layers appear. Set aesthetics using arguments inside of layer functions. Aesthetics also determine how data map to appearances.
+
+### Layers
+
+`ggplot()` initializes & specifies input data
+`geom_point()` scatterplot
+`geom_line()` lines
+`ggtitle`, `xlab()`, `ylab()`: layers of labels
+`facet_wrap()`: layer creating separate panels stratified by some factor wrapping around
+`facet_grid()`: same idea, but can split by two variables along rows and columns (e.g. `facet_grid(gender ~ age_group)`)
+`theme_bw()`: replace default gray background with black-and-white
+
+
+### Aesthetics
+
+`x`, `y`: coordinate values to use
+`color`: set color of elements based on some data value
+`group`: describe which points are conceptually grouped together for the plot (often used with lines)
+`size`: set size of points/lines based on some data value
+`alpha`: set transparency based on some data value
+
+Arguments inside the `aes()` (mapping aesthetics) depend on the data you're using. Arguments inside the layers (setting aesthetics) do not.
+
+### Plots babieeeeee
+
+```{r plots for china, fig.align='center'}
+ggplot(data = china,
+       aes(x = year, y = lifeExp)) +
+  geom_point(color="red", size=3) +
+  xlab("Year") +
+  ylab("Life expectancy") +
+  ggtitle("Life expectancy in China") +
+  theme_bw(base_size=12) # changes the background color and makes the base text size bigger
+```
+
+
+Let's say we want to instead plot all the countries
+
+```{r all countries, fig.align='center'}
+
+# switch to lines and need to group by country. drop size=3
+# also as an aesthetic add color=continent
+ggplot(data = gapminder, 
+       aes(x = year, y = lifeExp, 
+           group = country, 
+           color=continent)) +
+  geom_line() +
+  xlab("Year") + 
+  ylab("Life expectancy") +
+  ggtitle("Life expectancy over time") +
+  theme_bw(base_size=18)
+
+#split these out:
+# drop base_size18 to make the x axis labels legible
+# legend.position = assigned coords to move it elsewhere ... or instead to drop the legend
+#     write "theme(legend.position = "none")"
+ggplot(data = gapminder, 
+       aes(x = year, y = lifeExp, 
+           group = country, 
+           color=continent)) +
+  geom_line() +
+  xlab("Year") + 
+  ylab("Life expectancy") +
+  ggtitle("Life expectancy over time") +
+  theme_bw() +
+  facet_wrap(~ continent) +
+  theme(legend.position = c(0.8, 0.25))
+
+
+
+```
+
+
+To store a plot, assign it to a name. This will not display the graph. You can then use this object to add more layers.
+
+Syntactal note: you can enter a line break after `<-` assignment operators, `,` commas (for example between options).
+
+
+```{r store and add layers, fig.align='center'}
+
+lifeExp_by_year <- 
+  ggplot(data = gapminder, 
+       aes(x = year, y = lifeExp, 
+           group = country, 
+           color=continent)) +
+  geom_line() +
+  xlab("Year") + 
+  ylab("Life expectancy") +
+  ggtitle("Life expectancy over time") +
+  theme_bw() +
+  facet_wrap(~ continent) +
+  theme(legend.position = "none")
+
+lifeExp_by_year + theme(legend.position ="bottom")
+
+
+
+```
+
+
+When adding additional layers, you can change the axis ranges, make them log or sqrt scale.
+
+Text and ticks can be edited most easily in the `theme()` layer of a graph. Note this is different from `theme_bw()` and should always *follow* those more specific themes governing backgrounds.
+
+```{r change legend name}
+
+lifeExp_by_year +
+  theme(legend.position = c(0.8, 0.2)) +
+  scale_color_manual(
+    name = "Which continent are\nwe looking at?", # \n adds a line break
+    values = c("Africa" = "seagreen", "Americas" = "turquoise1", 
+               "Asia" = "royalblue", "Europe" = "violetred1", "Oceania" = "yellow"))
+
+```
+
+
+*Scales* are layers that control how the mapped aesthetics appear. You can modify these with a `scale_[aesthetic]_[option]()` layer where `[aesthetic]` is `color`, `shape`, `linetype`, `alpha`, `size`, `fill`, etc. and `[option]` is something like `manual`, `continuous` or `discrete` (depending on nature of the variable).
+
+
+When you knit an R Markdown file, any plots you make are automatically saved in the "figure" folder in `.png` format. If you want to save another copy (perhaps of a different file type for use in a manuscript), use `ggsave()`:
+
+`ggsave("I_saved_a_file.pdf", plot = lifeExp_by_year,`
+       `height = 3, width = 5, units = "in")`
+

@@ -1,0 +1,159 @@
+---
+title: "Homework 2"
+author: "Grace Falken"
+date: "4/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r libraries, message=FALSE}
+
+library(gapminder)
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(ggridges)
+library(viridis)
+library(hrbrthemes)
+
+```
+
+```{r data}
+
+data(gapminder)
+asia <- gapminder %>% filter(country=="China" | country=="Japan" | country=="Nepal" | country=="Taiwan" | country=="Cambodia" | country=="Korea, Dem. Rep." | country=="Korea, Rep." | country=="Thailand" | country=="Laos" | country=="Vietnam")
+
+```
+
+## Life Expectancy and GDP
+
+Let's say that we're interested in first exploring the global relationship between life expectancy and GDP per capita. Do people descriptively live longer in richer countries?
+
+We can visualize this relationship by looking at a single year from our panel. 
+
+```{r life exp and gdp, fig.align='center'}
+
+ggplot(data=gapminder%>%filter(year==1997),
+       mapping=aes(x=lifeExp, y=gdpPercap)) +
+  geom_point(alpha=0.8, aes(color=continent)) +
+  theme_hc() +
+  labs(
+    title="Country-level Life Expectancy by GDP -- 1997",
+    x="Life Expectancy",
+    y="GDP Per Capita") +
+  scale_color_manual(
+    name = "Continent", 
+    values = c("Africa" = "#009E73", "Americas" = "#F0E442", 
+               "Asia" = "#0072B2", "Europe" = "#D55E00", "Oceania" = "#CC79A7")) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+Considering the clusters of observations by continent, we can see there are clearly different distributions of life expectancy and GDP per capita across continents. 
+
+## Life Expectancy Distributions
+
+Let's further look at this by presenting faceted box-plots of life expectancy by continent and how that changes over time.
+
+
+```{r LE facet year, fig.align='center'}
+
+ggplot(gapminder, aes(x=continent, y=lifeExp, fill=continent)) + 
+    geom_boxplot(alpha=0.6) +
+    facet_wrap(~year) + 
+  labs(
+    title="Distributions of National-Level Life Expectancy by Continent",
+    x="Continent",
+    y="Life Expectancy") +  
+  theme_hc() + 
+  scale_fill_manual(
+    name = "Continent", 
+    values = c("Africa" = "#009E73", "Americas" = "#F0E442", 
+               "Asia" = "#0072B2", "Europe" = "#D55E00", "Oceania" = "#CC79A7")) + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_blank(), axis.ticks=element_blank())
+
+
+```
+
+While this figure shows all the information I want, I'm actually interested in how each continent-level distribution changes from period-to-period. So let's instead facet by continent:
+
+
+```{r LE facet continent, fig.align='center'}
+
+#first make year a factor variable
+gapminder$yearfact <- as.factor(gapminder$year)
+
+ggplot(gapminder, aes(x=yearfact, y=lifeExp, fill=continent)) + 
+    geom_boxplot(alpha=0.6) +
+    facet_wrap(~continent) + 
+  labs(
+    title="Distributions of National Life Expectancy by Continent",
+    x="Year",
+    y="Life Expectancy") +  
+  theme_hc() + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(angle = 45), axis.ticks = element_blank()) +
+  theme(legend.position = "none") +  
+  scale_fill_manual(
+    name = "Continent", 
+    values = c("Africa" = "#009E73", "Americas" = "#F0E442", 
+               "Asia" = "#0072B2", "Europe" = "#D55E00", "Oceania" = "#CC79A7")) 
+ 
+```
+
+And from this we can observe that Europe and Oceania start at higher life expectancies than the other continents, and as such have slower rates of improvement. Visually, it looks like Asia has the fastest rate of increasing life expectancy. 
+
+## A Closer Look at GDP
+
+
+First let's look at the relative distributions of GDP per capita across continents. Notice I've dropped Oceania here because there are no observations for GDP in 1952 for that region. I also constrain the X axis because there was a single outlier that limited the visibility of the distributions when included. 
+
+```{r gdp ridgeline, message=FALSE, warning=FALSE, fig.align='center'}
+
+
+ggplot(gapminder%>%filter(year==1952 & continent !="Oceania"), aes(x = gdpPercap, y = continent, fill = continent)) +
+  geom_density_ridges(alpha=0.4) +
+  theme_hc() +   
+  labs(
+    title="Continental Distributions of GDP Per Capita in 1952",
+    x="GDP Per Capita",
+    y="Continent"
+  ) +
+  theme(legend.position = "none") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  xlim(0, 18000) +
+  scale_fill_manual(
+    name = "Continent", 
+    values = c("Africa" = "#009E73", "Americas" = "#F0E442", 
+               "Asia" = "#0072B2", "Europe" = "#D55E00", "Oceania" = "#CC79A7")) 
+
+
+```
+
+One interesting feature of the data illustrated by this graph is that the African, American, and Asian continents all exhibit relatively uni-modal distributions of GDP per capita, while Europe has more variation or a multi-modal distribution. 
+
+
+
+## Considering Just a Few Countries
+
+Let's zoom in to consider the trends across a few countries in a single continent. Asia looks like it will providing an interesting case because there's higher variation in life expectancy and GDP across countries and over time than the other continents. 
+
+```{r asia, message=FALSE, warning=FALSE, fig.align='center'}
+
+ggplot(data=asia,mapping=aes(x=year, y=gdpPercap, group=country, color=country)) +
+  geom_point(aes(size=pop), alpha=0.75) + 
+  geom_line(alpha=0.5) +  
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme_hc() +
+  labs(size="Population", color="Country", x="Year", y="GDP Per Capita", 
+       title="Subsample Trends in GDP Per Capita") +
+  theme(legend.position = "right")
+```
+
+
+Where when we scale the points by national population, we see that China's population not only grows dramatically over the panel but is alos much larger than the other countries. The countries with the fastest growth in GDP per capita, however, are Japan, South Korea, and Taiwan. 
+

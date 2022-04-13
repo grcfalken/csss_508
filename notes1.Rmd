@@ -1,0 +1,81 @@
+---
+title: "Class notes 3/31"
+author: "Grace Falken"
+date: "`r format(Sys.time(), format='%B %d, %Y')`"
+output: 
+  html_document:
+      toc: true
+      theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pander)
+```
+
+## Intro and syntax
+
+```{r define object}
+new.object<-c(1,2,3,4,5)
+```
+
+
+remember how to $\beta_i=\sqrt{l}$
+
+
+To save results from running a code chunk, set `cache=TRUE` in the `R` chunk options. To embed code in the document, input the statement you want, such as the new object: `r new.object`.
+
+## Data frames
+
+```{r cars data, echo=FALSE}
+data(cars)
+head(cars, 5)
+str(cars) #tells the structure of a dataframe
+summary(cars) #tells you different info for different objects (e.g., regression)
+hist(cars$speed) #notice that the dollar sign is an extract function
+
+
+#better histogram:
+hist(cars$dist,
+     xlab = "Distance (ft)", # X axis label
+     main = "Observed stopping distances of cars") # Title
+```
+
+## Doing math
+
+```{r assign}
+(dist.mean <- mean(cars$dist)) #putting in parens makes this print the answer as well as assign the object
+(speed.mean <- mean(cars$speed))
+```
+
+
+```{r plot}
+plot(dist ~ speed, data = cars,
+     xlab = "Speed (mph)",
+     ylab = "Stopping distance (ft)",
+     main = "Speeds and stopping distances of cars",
+     pch = 16) # Point size
+abline(h = dist.mean, col = "firebrick")
+abline(v = speed.mean, col = "cornflowerblue")
+```
+
+## Swiss data
+
+```{r}
+data(swiss)
+pairs(swiss, pch = 8, col = "violet",
+      main = "Pairwise comparisons of Swiss variables")
+```
+
+
+## Installing packages
+
+Notice that we installed the pander package. This is loaded above and isn't a part of the markdown document.
+
+Also when you install a package you need to use quo
+
+```{r}
+pander(summary(swiss), stype="rmarkdown", split.tables=120)
+pander(head(swiss, 5), style="rmarkdown", split.tables=120)
+```
+
